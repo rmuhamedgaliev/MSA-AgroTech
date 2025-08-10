@@ -10,6 +10,7 @@ on:
       - master
     paths:
       - "diagrams/**"
+  workflow_dispatch:
 
 permissions:
   contents: write
