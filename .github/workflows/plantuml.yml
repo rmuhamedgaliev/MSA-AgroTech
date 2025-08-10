@@ -1,5 +1,4 @@
 name: PlantUML Diagrams
-
 on:
   push:
     branches:
@@ -8,38 +7,48 @@ on:
     branches:
       - master
 
+permissions:
+  contents: write
+
 jobs:
   generate-diagrams:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
-          java-version: "11"
-          distribution: adopt
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Install PlantUML
         run: |
-          # Download and install PlantUML JAR (more reliable than apt)
-          curl -O https://plantuml.com/download/plantuml-1.2022.0.jar
-          java -jar plantuml-1.2022.0.jar
-
-      - name: Create output directory
-        run: mkdir -p img
+          sudo apt-get update
+          sudo apt-get install -y plantuml
 
       - name: Generate Diagrams
         run: |
-          java -jar plantuml-1.2022.0.jar diagrams/*.puml -o img/
+          find diagrams -name "*.puml" -exec plantuml {} \;
 
-      - name: Commit Diagrams
+      - name: Check for changes
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push diagrams
+        if: steps.verify-changed-files.outputs.changed == 'true' && github.event_name == 'push'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add diagrams/**/*.png
-          git commit -m "Automated diagram generation" || echo "No changes to commit"
-          git push origin main
-        if: success()
+          git add diagrams/**/*.png diagrams/**/*.svg
+          git commit -m "🤖 Auto-generate PlantUML diagrams [skip ci]"
+          git push
