@@ -1,6 +1,6 @@
 @startuml Архитектура_АгроТех_Системы_v4
 
-!include ../c4-plantuml/C4_Container.puml
+!include <C4/C4_Container>
 
 ' === Участники ===
 Person(директор, "Директор хозяйства", "Управление через веб-портал")

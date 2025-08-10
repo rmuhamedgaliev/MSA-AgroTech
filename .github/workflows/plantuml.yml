@@ -32,26 +32,10 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Install PlantUML
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y plantuml
-
-      - name: Debug files structure
-        run: |
-          echo "=== Current directory ==="
-          pwd
-          echo "=== Files in diagrams ==="
-          ls -la diagrams/
-          echo "=== Files in c4-plantuml ==="
-          ls -la c4-plantuml/ || echo "c4-plantuml not found"
-          echo "=== First 10 lines of diagram ==="
-          head -10 diagrams/agrotech.puml
-
-      - name: Generate Diagrams
+      - name: Generate Diagrams with Docker
         run: |
           mkdir -p img
-          plantuml -verbose diagrams/*.puml -o ../img/
+          docker run --rm -v $(pwd):/data plantuml/plantuml:latest -verbose /data/diagrams/*.puml -o /data/img/
 
       - name: Check for changes
         id: verify-changed-files
