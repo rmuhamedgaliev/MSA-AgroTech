@@ -41,8 +41,8 @@ jobs:
           done
 
       - name: Force commit and push diagrams
-        if: github.event_name == 'push'
         run: |
+          echo "=== Event name: ${{ github.event_name }} ==="
           echo "=== Generated files in img/ ==="
           ls -la img/ || echo "No img/ folder found"
 
