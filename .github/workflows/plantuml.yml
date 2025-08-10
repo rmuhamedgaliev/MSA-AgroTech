@@ -25,31 +25,42 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
+      - name: Install PlantUML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y plantuml
 
-      - name: Generate Diagrams with Docker
+      - name: Generate Diagrams
         run: |
           mkdir -p img
-          # Генерируем каждый файл отдельно с сохранением имени
           for file in diagrams/*.puml; do
             if [ -f "$file" ]; then
               filename=$(basename "$file" .puml)
-              docker run --rm -v $(pwd):/data plantuml/plantuml:latest \
-                -verbose "/data/$file" -o "/data/img/" -filename "$filename"
+              plantuml "$file" -o ../img/ -filename "$filename"
             fi
           done
 
       - name: Force commit and push diagrams
         if: github.event_name == 'push'
         run: |
-          echo "=== Force updating diagrams ==="
+          echo "=== Generated files in img/ ==="
+          ls -la img/ || echo "No img/ folder found"
+
+          echo "=== Git status before adding ==="
+          git status --porcelain
+
+          echo "=== Adding files ==="
+          git add img/ --force -v
+
+          echo "=== Git status after adding ==="
+          git status --porcelain
+
+          echo "=== Files staged for commit ==="
+          git diff --staged --name-only
+
+          echo "=== Committing and pushing ==="
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add img/ --force
           git commit -m "🤖 Auto-generate PlantUML diagrams [skip ci]" --allow-empty
           git push
           echo "✅ Diagrams force updated"
