@@ -36,31 +36,23 @@ jobs:
           for file in diagrams/*.puml; do
             if [ -f "$file" ]; then
               filename=$(basename "$file" .puml)
-              plantuml "$file" -o ../img/ -filename "$filename"
+              # Генерируем во временную папку и переименовываем
+              plantuml "$file" -o ../temp/
+              # Находим созданный файл и переименовываем
+              for generated in temp/*.png; do
+                if [ -f "$generated" ]; then
+                  mv "$generated" "img/$filename.png"
+                fi
+              done
             fi
           done
+          # Удаляем временную папку
+          rm -rf temp
 
-      - name: Force commit and push diagrams
+      - name: Commit and push diagrams
         run: |
-          echo "=== Event name: ${{ github.event_name }} ==="
-          echo "=== Generated files in img/ ==="
-          ls -la img/ || echo "No img/ folder found"
-
-          echo "=== Git status before adding ==="
-          git status --porcelain
-
-          echo "=== Adding files ==="
-          git add img/ --force -v
-
-          echo "=== Git status after adding ==="
-          git status --porcelain
-
-          echo "=== Files staged for commit ==="
-          git diff --staged --name-only
-
-          echo "=== Committing and pushing ==="
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          git add img/ --force
           git commit -m "🤖 Auto-generate PlantUML diagrams [skip ci]" --allow-empty
           git push
-          echo "✅ Diagrams force updated"
