@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate Diagrams
         run: |
-          plantuml diagrams/pl*.puml
+          plantuml diagrams/*.puml -o ../img/
 
       - name: Commit Diagrams
         run: |
