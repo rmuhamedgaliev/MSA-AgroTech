@@ -19,12 +19,11 @@ jobs:
   generate-diagrams:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository1
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-          submodules: recursive
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -35,22 +34,22 @@ jobs:
       - name: Generate Diagrams with Docker
         run: |
           mkdir -p img
-          docker run --rm -v $(pwd):/data plantuml/plantuml:latest -verbose /data/diagrams/*.puml -o /data/img/
+          # Генерируем каждый файл отдельно с сохранением имени
+          for file in diagrams/*.puml; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file" .puml)
+              docker run --rm -v $(pwd):/data plantuml/plantuml:latest \
+                -verbose "/data/$file" -o "/data/img/" -filename "$filename"
+            fi
+          done
 
-      - name: Check for changes
-        id: verify-changed-files
+      - name: Force commit and push diagrams
+        if: github.event_name == 'push'
         run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push diagrams
-        if: steps.verify-changed-files.outputs.changed == 'true' && github.event_name == 'push'
-        run: |
+          echo "=== Force updating diagrams ==="
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add img/**/*.png img/**/*.svg
-          git commit -m "🤖 Auto-generate PlantUML diagrams [skip ci]"
+          git add img/ --force
+          git commit -m "🤖 Auto-generate PlantUML diagrams [skip ci]" --allow-empty
           git push
+          echo "✅ Diagrams force updated"
