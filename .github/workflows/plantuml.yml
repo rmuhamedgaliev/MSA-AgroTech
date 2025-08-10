@@ -3,9 +3,13 @@ on:
   push:
     branches:
       - master
+    paths:
+      - "diagrams/**"
   pull_request:
     branches:
       - master
+    paths:
+      - "diagrams/**"
 
 permissions:
   contents: write
@@ -19,6 +23,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          submodules: recursive
 
       - name: Set up Java
         uses: actions/setup-java@v4
