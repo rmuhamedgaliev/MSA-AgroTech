@@ -37,9 +37,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y plantuml
 
+      - name: Debug files structure
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== Files in diagrams ==="
+          ls -la diagrams/
+          echo "=== Files in c4-plantuml ==="
+          ls -la c4-plantuml/ || echo "c4-plantuml not found"
+          echo "=== First 10 lines of diagram ==="
+          head -10 diagrams/agrotech.puml
+
       - name: Generate Diagrams
         run: |
-          plantuml diagrams/*.puml -o ../img/
+          mkdir -p img
+          plantuml -verbose diagrams/*.puml -o ../img/
 
       - name: Check for changes
         id: verify-changed-files
