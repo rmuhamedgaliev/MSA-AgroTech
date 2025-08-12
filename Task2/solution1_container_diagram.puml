@@ -1,0 +1,111 @@
+@startuml Основное_решение_C2
+!include <C4/C4_Container>
+
+title Основное решение: Гибридная Edge-Cloud архитектура (C2 - Container Diagram)
+
+' Пользователи (верхний уровень)
+Person(operator, "Оператор фермы", "Отвечает за мониторинг животных")
+Person(farm_manager, "Менеджер фермы", "Принимает управленческие решения")
+Person(veterinarian, "Ветеринар", "Контролирует здоровье животных")
+
+Lay_D(operator, farm_manager)
+Lay_R(farm_manager, veterinarian)
+
+' Клиентские приложения (второй уровень)
+Container(mobile_app, "Mobile App", "Flutter", "Мобильное приложение для операторов")
+Container(web_portal, "Web Portal", "React", "Веб-портал для менеджеров")
+
+Lay_D(operator, mobile_app)
+Lay_D(farm_manager, web_portal)
+
+' Центральная система (третий уровень)
+System_Boundary(central_boundary, "Центральный офис") {
+    Container(central_api, "Central API Gateway", "Caddy", "Единая точка входа, аутентификация")
+    Container(user_management, "User Management", "Go", "Аутентификация и управление пользователями")
+
+    Container(data_aggregator, "Data Aggregation Service", "Go", "Сбор и обработка данных со всех ферм")
+    Container(notification_service, "Notification Service", "Go", "Управление уведомлениями и алертами")
+    Container(integration_service, "Integration Service", "Go", "Интеграция с внешними системами")
+
+    Container(message_broker, "Message Broker", "Apache Kafka", "Асинхронная коммуникация между сервисами")
+
+    Container(central_db, "Central Database", "PostgreSQL", "Централизованное хранение данных")
+    Container(analytics_db, "Analytics Database", "ClickHouse", "Аналитическое хранилище")
+
+    Lay_R(central_api, user_management)
+    Lay_D(central_api, data_aggregator)
+    Lay_R(data_aggregator, notification_service)
+    Lay_R(notification_service, integration_service)
+    Lay_D(data_aggregator, message_broker)
+    Lay_D(message_broker, central_db)
+    Lay_R(central_db, analytics_db)
+}
+
+' Edge система на ферме (четвертый уровень)
+System_Boundary(farm_boundary, "Ферма (Edge)") {
+    Container(edge_api, "Edge API Gateway", "Caddy", "Локальный API и маршрутизация")
+    Container(sync_service, "Data Sync Service", "Go", "Синхронизация с центральным сервером")
+
+    Container(video_analytics, "Video Analytics Service", "Python + AI Models", "Анализ видеопотоков в реальном времени")
+    Container(livestock_service, "Livestock Management", "Go", "Учет поголовья, состояние животных")
+    Container(feeding_controller, "Feeding Control", "Go", "Управление кормушками и поилками")
+    Container(equipment_monitor, "Equipment Monitor", "Python", "Мониторинг систем фильтрации и климата")
+
+    Container(local_storage, "Local Database", "PostgreSQL/SQLite", "Локальное хранение данных фермы (в зависимости от класса устройства)")
+
+    Lay_R(edge_api, sync_service)
+    Lay_D(edge_api, video_analytics)
+    Lay_R(video_analytics, livestock_service)
+    Lay_R(livestock_service, feeding_controller)
+    Lay_R(feeding_controller, equipment_monitor)
+    Lay_D(video_analytics, local_storage)
+}
+
+' Внешние системы (нижний уровень)
+System_Ext(erp_system, "ERP система АгроТех Х")
+System_Ext(bi_analytics, "BI система")
+System_Ext(ai_platform, "AI Platform")
+System_Ext(notification_external, "External Notifications")
+
+Lay_R(erp_system, bi_analytics)
+Lay_R(bi_analytics, ai_platform)
+Lay_R(ai_platform, notification_external)
+
+' Взаимодействия сверху вниз
+Rel_D(operator, mobile_app, "Использует для мониторинга")
+Rel_D(farm_manager, web_portal, "Использует для аналитики")
+Rel_D(veterinarian, mobile_app, "Получает уведомления о здоровье")
+
+Rel_D(mobile_app, central_api, "API запросы", "HTTPS/REST")
+Rel_D(web_portal, central_api, "API запросы", "HTTPS/REST")
+
+Rel_R(central_api, user_management, "Аутентификация", "HTTP")
+Rel_D(central_api, data_aggregator, "Маршрутизация", "HTTP")
+Rel_R(data_aggregator, notification_service, "Координация", "HTTP")
+Rel_R(notification_service, integration_service, "Интеграция", "HTTP")
+
+Rel_D(data_aggregator, message_broker, "Публикация событий", "Kafka")
+Rel_D(message_broker, central_db, "Сохранение данных", "SQL")
+Rel_R(central_db, analytics_db, "Аналитические данные", "ETL")
+
+' Edge взаимодействия
+Rel_D(sync_service, central_api, "Синхронизация данных", "HTTPS/REST")
+Rel_D(edge_api, video_analytics, "Маршрутизация", "HTTP")
+Rel_R(video_analytics, livestock_service, "Данные анализа", "HTTP")
+Rel_R(livestock_service, feeding_controller, "Команды кормления", "HTTP")
+Rel_R(feeding_controller, equipment_monitor, "Состояние оборудования", "HTTP")
+
+Rel_D(video_analytics, local_storage, "Результаты анализа", "SQL")
+Rel_D(livestock_service, local_storage, "Данные поголовья", "SQL")
+Rel_D(feeding_controller, local_storage, "Данные кормления", "SQL")
+Rel_D(equipment_monitor, local_storage, "Данные мониторинга", "SQL")
+
+Rel_U(sync_service, local_storage, "Чтение данных", "SQL")
+
+' Внешние интеграции
+Rel_D(integration_service, erp_system, "Синхронизация", "REST API")
+Rel_D(integration_service, bi_analytics, "Экспорт метрик", "REST API")
+Rel_D(notification_service, notification_external, "Уведомления", "SMTP/SMS")
+Rel_D(video_analytics, ai_platform, "AI модели", "gRPC")
+
+@enduml

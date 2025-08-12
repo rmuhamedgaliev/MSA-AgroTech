@@ -1,0 +1,78 @@
+@startuml Основное_решение_C3_VideoAnalytics
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+
+title Основное решение: Video Analytics Service - Компонентная диаграмма (C3)
+
+Person(operator, "Оператор фермы", "Мониторинг критических событий")
+Container(edge_api, "Edge API Gateway", "Caddy", "Локальная маршрутизация запросов")
+
+Container_Boundary(video_analytics_boundary, "Video Analytics Service") {
+    Component(stream_controller, "Stream Controller", "Go REST Controller", "HTTP API для управления видеопотоками, health checks")
+    Component(video_ingestion, "Video Ingestion", "Go Service", "Прием и буферизация видеопотоков с камер")
+    Component(frame_preprocessor, "Frame Preprocessor", "Python Service", "Нормализация кадров, извлечение ROI областей")
+    Component(ai_inference_engine, "AI Inference Engine", "Python Service", "Выполнение инференса AI моделей для анализа поведения")
+    Component(behavior_analyzer, "Behavior Analyzer", "Go Service", "Анализ паттернов поведения, выявление аномалий")
+    Component(incident_detector, "Incident Detector", "Go Service", "Детекция критических событий на основе правил")
+    Component(livestock_counter, "Livestock Counter", "Python Service", "Подсчет поголовья с использованием computer vision")
+    Component(alert_dispatcher, "Alert Dispatcher", "Go Service", "Формирование и отправка уведомлений")
+    Component(video_storage, "Video Storage Manager", "Go Service", "Управление хранением видеоданных и метаданных")
+    Component(metrics_collector, "Metrics Collector", "Go Service", "Сбор и экспорт метрик производительности")
+
+    Lay_D(stream_controller, video_ingestion)
+    Lay_D(video_ingestion, frame_preprocessor)
+    Lay_D(frame_preprocessor, ai_inference_engine)
+    Lay_D(ai_inference_engine, behavior_analyzer)
+    Lay_D(behavior_analyzer, incident_detector)
+    Lay_D(incident_detector, alert_dispatcher)
+    Lay_R(ai_inference_engine, livestock_counter)
+    Lay_D(video_ingestion, video_storage)
+    Lay_D(alert_dispatcher, metrics_collector)
+}
+
+ContainerDb(local_storage, "Local Database", "PostgreSQL/SQLite", "Хранение результатов анализа на edge (в зависимости от класса устройства)")
+Container(sync_service, "Data Sync Service", "Go", "Синхронизация с центром")
+System_Ext(camera_systems, "Camera Systems", "Сеть IP-камер на ферме")
+System_Ext(ai_platform, "AI Platform", "Внешние предобученные модели")
+Container(livestock_service, "Livestock Management", "Go", "Управление данными поголовья")
+
+' Внешние взаимодействия
+Rel(operator, edge_api, "Мониторинг видеоаналитики", "HTTPS/REST")
+Rel(edge_api, stream_controller, "API запросы", "HTTP")
+Rel(camera_systems, video_ingestion, "Видеопотоки RTSP", "RTSP/UDP")
+
+' Основной поток обработки видео
+Rel(stream_controller, video_ingestion, "Старт/стоп потоков", "gRPC")
+Rel(video_ingestion, frame_preprocessor, "Сырые кадры", "Binary Stream")
+Rel(frame_preprocessor, ai_inference_engine, "Нормализованные кадры", "Protocol Buffers")
+Rel(ai_inference_engine, behavior_analyzer, "AI результаты", "JSON Events")
+Rel(behavior_analyzer, incident_detector, "Поведенческие паттерны", "Event Stream")
+Rel(ai_inference_engine, livestock_counter, "Детекции объектов", "Bounding Boxes")
+
+' Обработка инцидентов и уведомления
+Rel(incident_detector, alert_dispatcher, "Критические события", "Event Message")
+Rel(alert_dispatcher, operator, "Локальные уведомления", "WebSocket Push")
+Rel(livestock_counter, livestock_service, "Данные подсчета", "gRPC")
+
+' Хранение и синхронизация
+Rel(video_ingestion, video_storage, "Видеоданные", "File I/O")
+Rel(behavior_analyzer, local_storage, "Результаты анализа", "SQL")
+Rel(incident_detector, local_storage, "Журнал инцидентов", "SQL")
+Rel(livestock_counter, local_storage, "Статистика поголовья", "SQL")
+Rel(video_storage, local_storage, "Метаданные видео", "SQL")
+
+' Мониторинг и внешние интеграции
+Rel(metrics_collector, local_storage, "Системные метрики", "SQL")
+Rel(sync_service, local_storage, "Чтение для репликации", "SQL")
+Rel(ai_inference_engine, ai_platform, "Загрузка моделей", "HTTPS/gRPC")
+
+' Вспомогательная топология для читаемости
+Lay_D(operator, edge_api)
+Lay_D(edge_api, stream_controller)
+Lay_R(video_ingestion, camera_systems)
+Lay_R(ai_inference_engine, ai_platform)
+Lay_D(incident_detector, local_storage)
+Lay_R(local_storage, sync_service)
+Lay_R(livestock_counter, livestock_service)
+
+@enduml

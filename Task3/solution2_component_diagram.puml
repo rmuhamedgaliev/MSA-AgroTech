@@ -1,0 +1,105 @@
+@startuml Альтернативное_решение_C3_VideoAnalytics
+!include <C4/C4_Component>
+
+title Альтернативное решение: Cloud Video Analytics Service - Компонентная диаграмма (C3)
+
+' Пользователи (верхний уровень)
+Person(operator, "Оператор фермы", "Мониторинг через мобильное приложение")
+
+' Клиентские приложения (второй уровень)
+Container(mobile_app, "Mobile App", "Flutter", "Клиентское приложение")
+Container(api_gateway, "API Gateway", "Cloud API Gateway", "Единая точка входа")
+
+' Внешние системы
+System_Ext(edge_gateways, "Edge Gateways", "Шлюзы сбора данных на фермах")
+System_Ext(cloud_ai_services, "Cloud AI Services", "AWS/Azure/Google AI")
+
+' Хранилища данных
+ContainerDb(video_storage, "Video Storage", "Cloud Object Storage", "Масштабируемое хранение видео")
+ContainerDb(primary_db, "Primary Database", "Cloud PostgreSQL", "Основные данные анализа")
+Container(message_queue, "Message Queue", "Cloud Message Service", "Асинхронные сообщения")
+
+' Позиционирование внешних элементов
+Lay_D(operator, mobile_app)
+Lay_D(mobile_app, api_gateway)
+Lay_R(edge_gateways, cloud_ai_services)
+Lay_D(edge_gateways, video_storage)
+Lay_R(video_storage, primary_db)
+Lay_R(primary_db, message_queue)
+
+' Облачный Video Analytics Service (основной контейнер)
+Container_Boundary(cloud_video_boundary, "Cloud Video Analytics Service") {
+    Component(analytics_controller, "Analytics Controller", "Go REST Controller", "HTTP API для управления видеоаналитикой")
+
+    Component(stream_ingestion, "Stream Ingestion Gateway", "Go Service", "Прием видеопотоков от всех ферм")
+    Component(video_preprocessor, "Video Preprocessor", "Python Service", "Предварительная обработка видео")
+    Component(video_storage_manager, "Video Storage Manager", "Go Service", "Управление облачным хранением")
+
+    Component(ai_orchestrator, "AI Orchestrator", "Go Service", "Оркестрация облачных AI сервисов")
+    Component(cloud_inference, "Cloud Inference Engine", "Python Service", "Координация AI анализа")
+
+    Component(behavior_aggregator, "Behavior Aggregator", "Go Service", "Агрегация результатов анализа")
+    Component(livestock_analytics, "Livestock Analytics", "Python Service", "Аналитика поголовья")
+    Component(incident_correlator, "Incident Correlator", "Go Service", "Корреляция инцидентов")
+
+    Component(notification_dispatcher, "Notification Dispatcher", "Go Service", "Диспетчеризация уведомлений")
+    Component(metrics_aggregator, "Metrics Aggregator", "Go Service", "Агрегация метрик")
+
+    ' Правильное позиционирование компонентов
+    Lay_D(analytics_controller, stream_ingestion)
+    Lay_R(stream_ingestion, video_preprocessor)
+    Lay_R(video_preprocessor, video_storage_manager)
+
+    Lay_D(stream_ingestion, ai_orchestrator)
+    Lay_R(ai_orchestrator, cloud_inference)
+
+    Lay_D(ai_orchestrator, behavior_aggregator)
+    Lay_R(behavior_aggregator, livestock_analytics)
+    Lay_R(livestock_analytics, incident_correlator)
+
+    Lay_D(behavior_aggregator, notification_dispatcher)
+    Lay_R(notification_dispatcher, metrics_aggregator)
+}
+
+' Взаимодействия сверху вниз
+Rel_D(operator, mobile_app, "Мониторинг видеоаналитики")
+Rel_D(mobile_app, api_gateway, "API запросы", "HTTPS/REST")
+Rel_D(api_gateway, analytics_controller, "Маршрутизация", "HTTP")
+
+' Основной поток обработки (сверху вниз, слева направо)
+Rel_D(analytics_controller, stream_ingestion, "Управление потоками", "gRPC")
+Rel_R(stream_ingestion, video_preprocessor, "Сырые видеопотоки", "Binary Stream")
+Rel_R(video_preprocessor, video_storage_manager, "Обработанное видео", "Compressed Stream")
+
+Rel_D(stream_ingestion, ai_orchestrator, "Данные для AI", "Video Frames")
+Rel_R(ai_orchestrator, cloud_inference, "Запросы к AI", "gRPC/REST")
+
+Rel_D(ai_orchestrator, behavior_aggregator, "AI результаты", "JSON Events")
+Rel_R(behavior_aggregator, livestock_analytics, "Поведенческие данные", "Event Stream")
+Rel_R(livestock_analytics, incident_correlator, "Аналитика поголовья", "Analytics Data")
+
+Rel_D(behavior_aggregator, notification_dispatcher, "Критические события", "Event Message")
+Rel_R(notification_dispatcher, metrics_aggregator, "Метрики уведомлений", "Statistics")
+
+' Внешние входящие данные
+Rel_U(edge_gateways, stream_ingestion, "Видеопотоки по интернету", "HTTPS/WebRTC")
+
+' Облачные AI интеграции
+Rel_U(cloud_ai_services, cloud_inference, "AI анализ", "REST API/gRPC")
+Rel_U(cloud_ai_services, ai_orchestrator, "Выбор AI сервиса", "Multi-Cloud API")
+
+' Хранение данных (вниз к базам)
+Rel_D(video_storage_manager, video_storage, "Архивирование", "Object Storage API")
+Rel_D(behavior_aggregator, primary_db, "Результаты анализа", "SQL")
+Rel_D(livestock_analytics, primary_db, "Статистика поголовья", "SQL")
+Rel_D(incident_correlator, primary_db, "Журнал инцидентов", "SQL")
+
+' Асинхронная обработка
+Rel_D(notification_dispatcher, message_queue, "Уведомления", "Message Protocol")
+Rel_D(behavior_aggregator, message_queue, "События поведения", "Message Protocol")
+Rel_D(metrics_aggregator, message_queue, "Системные метрики", "Message Protocol")
+
+' Обратные уведомления пользователю
+Rel_U(notification_dispatcher, operator, "Push уведомления", "SMS/Email/Push")
+
+@enduml
