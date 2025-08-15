@@ -1,0 +1,125 @@
+@startuml Альтернативное_решение_C2
+!include <C4/C4_Container>
+
+title Альтернативное решение: Централизованная Cloud-архитектура (C2 - Container Diagram)
+
+' Пользователи (верхний уровень)
+Person(operator, "Оператор фермы", "Отвечает за мониторинг животных")
+Person(farm_manager, "Менеджер фермы", "Принимает управленческие решения")
+Person(veterinarian, "Ветеринар", "Контролирует здоровье животных")
+
+Lay_D(operator, farm_manager)
+Lay_R(farm_manager, veterinarian)
+
+' Клиентские приложения (второй уровень)
+Container(mobile_app, "Mobile App", "Flutter", "Мобильное приложение")
+Container(web_dashboard, "Web Dashboard", "React", "Веб-дашборд для мониторинга")
+
+Lay_D(operator, mobile_app)
+Lay_D(farm_manager, web_dashboard)
+
+' Облачная платформа (третий уровень)
+System_Boundary(cloud_boundary, "Облачная платформа") {
+    Container(api_gateway, "API Gateway", "Kong/AWS API Gateway", "Единая точка входа, rate limiting")
+    Container(user_service, "User Service", "Go", "Управление пользователями и ролями")
+
+    Container(video_analytics_cloud, "Video Analytics Service", "Python + Cloud AI", "Облачный анализ видеопотоков")
+    Container(livestock_management, "Livestock Management", "Go", "Управление поголовьем")
+    Container(feeding_management, "Feeding Management", "Go", "Управление системами кормления")
+    Container(equipment_service, "Equipment Service", "Go", "Мониторинг оборудования")
+    Container(notification_hub, "Notification Hub", "Go", "Централизованные уведомления")
+    Container(integration_gateway, "Integration Gateway", "Go", "Интеграция с внешними системами")
+
+    Container(message_queue, "Message Queue", "Cloud Message Service", "Асинхронная обработка сообщений")
+    Container(stream_processor, "Stream Processor", "Apache Kafka Streams", "Обработка потоков данных")
+    Container(data_processor, "Data Processing Engine", "Apache Spark", "Обработка больших объемов данных")
+
+    ContainerDb(primary_db, "Primary Database", "Cloud PostgreSQL", "Основная база данных")
+    ContainerDb(analytics_store, "Analytics Store", "Cloud Data Warehouse", "Аналитическое хранилище")
+    ContainerDb(video_storage, "Video Storage", "Cloud Object Storage", "Хранилище видеоданных")
+    ContainerDb(cache_layer, "Cache Layer", "Redis Cluster", "Кэширование данных")
+
+    Lay_R(api_gateway, user_service)
+    Lay_D(api_gateway, video_analytics_cloud)
+    Lay_R(video_analytics_cloud, livestock_management)
+    Lay_R(livestock_management, feeding_management)
+    Lay_R(feeding_management, equipment_service)
+    Lay_R(equipment_service, notification_hub)
+    Lay_R(notification_hub, integration_gateway)
+
+    Lay_D(video_analytics_cloud, message_queue)
+    Lay_R(message_queue, stream_processor)
+    Lay_R(stream_processor, data_processor)
+
+    Lay_D(message_queue, primary_db)
+    Lay_R(primary_db, analytics_store)
+    Lay_R(analytics_store, video_storage)
+    Lay_R(video_storage, cache_layer)
+}
+
+' Edge Gateway на ферме (четвертый уровень)
+System_Boundary(farm_boundary, "Ферма (Edge Gateway)") {
+    Container(data_collector, "Data Collection Gateway", "Go", "Сбор данных с устройств и датчиков")
+    Container(device_manager, "Device Manager", "Python", "Управление IoT устройствами")
+    Container(edge_buffer, "Edge Buffer", "Redis", "Буферизация данных при сбоях связи")
+
+    Lay_R(data_collector, device_manager)
+    Lay_D(data_collector, edge_buffer)
+}
+
+' Внешние системы (нижний уровень)
+System_Ext(erp_system, "ERP система АгроТех Х")
+System_Ext(bi_analytics, "BI система")
+System_Ext(cloud_ai_services, "Cloud AI Services")
+System_Ext(external_notifications, "External Notification Services")
+
+Lay_R(erp_system, bi_analytics)
+Lay_R(bi_analytics, cloud_ai_services)
+Lay_R(cloud_ai_services, external_notifications)
+
+' Взаимодействия сверху вниз
+Rel_D(operator, mobile_app, "Использует для мониторинга")
+Rel_D(farm_manager, web_dashboard, "Использует для аналитики")
+Rel_D(veterinarian, mobile_app, "Получает уведомления о здоровье")
+
+Rel_D(mobile_app, api_gateway, "API запросы", "HTTPS/REST")
+Rel_D(web_dashboard, api_gateway, "API запросы", "HTTPS/REST")
+
+Rel_R(api_gateway, user_service, "Аутентификация", "HTTP")
+Rel_D(api_gateway, video_analytics_cloud, "Маршрутизация", "HTTP")
+Rel_R(video_analytics_cloud, livestock_management, "Данные анализа", "HTTP")
+Rel_R(livestock_management, feeding_management, "Команды кормления", "HTTP")
+Rel_R(feeding_management, equipment_service, "Состояние оборудования", "HTTP")
+Rel_R(equipment_service, notification_hub, "Уведомления", "HTTP")
+Rel_R(notification_hub, integration_gateway, "Интеграция", "HTTP")
+
+' Потоки данных и обработка
+Rel_D(video_analytics_cloud, message_queue, "Публикация событий", "Message Protocol")
+Rel_R(message_queue, stream_processor, "Обработка потоков", "Stream API")
+Rel_R(stream_processor, data_processor, "Пакетная обработка", "Spark API")
+
+Rel_D(message_queue, primary_db, "Сохранение данных", "SQL")
+Rel_R(primary_db, analytics_store, "Аналитические данные", "ETL")
+Rel_D(video_analytics_cloud, video_storage, "Сохранение видео", "Object API")
+
+' Кэширование
+Rel_U(livestock_management, cache_layer, "Кэширование", "Redis")
+Rel_U(feeding_management, cache_layer, "Кэширование", "Redis")
+Rel_U(equipment_service, cache_layer, "Кэширование", "Redis")
+
+' Edge Gateway взаимодействия
+Rel_U(data_collector, api_gateway, "Передача данных", "HTTPS/REST")
+Rel_R(data_collector, device_manager, "Управление устройствами", "MQTT/HTTP")
+Rel_D(data_collector, edge_buffer, "Буферизация", "Redis Protocol")
+
+' Команды управления обратно на ферму
+Rel_D(feeding_management, device_manager, "Команды управления", "HTTPS/MQTT")
+Rel_D(equipment_service, device_manager, "Команды мониторинга", "HTTPS/MQTT")
+
+' Внешние интеграции
+Rel_D(integration_gateway, erp_system, "Синхронизация", "REST API")
+Rel_D(integration_gateway, bi_analytics, "Экспорт данных", "REST API")
+Rel_D(video_analytics_cloud, cloud_ai_services, "AI анализ", "REST API")
+Rel_D(notification_hub, external_notifications, "Отправка уведомлений", "REST/SMTP")
+
+@enduml

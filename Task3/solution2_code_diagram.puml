@@ -1,0 +1,1140 @@
+@startuml Альтернативное_решение_C4_BehaviorAggregator
+!include <C4/C4_Component>
+
+title Альтернативное решение: Behavior Aggregator - Диаграмма кода (C4)
+
+note as N1
+  Класс-диаграмма компонента Behavior Aggregator
+  из Cloud Video Analytics Service
+end note
+
+package "domain.model" {
+    class Animal {
+        +ID: string
+        +TagID: string
+        +FarmID: string
+        +Species: AnimalType
+        +Age: int
+        +Weight: float64
+        +HealthStatus: HealthStatus
+        +LastSeen: time.Time
+        +Position: Point3D
+        +CrossFarmCorrelations: []string
+        +IsHealthy(): bool
+        +UpdatePosition(pos: Point3D): void
+        +CalculateMovementSpeed(): float64
+        +GetGlobalActivityLevel(): ActivityLevel
+    }
+
+    class BehaviorEvent {
+        +ID: string
+        +AnimalID: string
+        +FarmID: string
+        +Timestamp: time.Time
+        +BehaviorType: BehaviorType
+        +Confidence: float64
+        +Duration: time.Duration
+        +Location: Point3D
+        +GlobalContext: map[string]interface{}
+        +SourceService: string
+        +IsAnomalous(): bool
+        +GetSeverity(): SeverityLevel
+        +RequiresGlobalCorrelation(): bool
+        +GetCrossFarmImpact(): ImpactLevel
+    }
+
+    enum BehaviorType {
+        FEEDING
+        DRINKING
+        RESTING
+        MOVING
+        AGGRESSIVE
+        MATING
+        DISTRESSED
+        SICK
+        SOCIAL_INTERACTION
+        ENVIRONMENTAL_RESPONSE
+    }
+
+    enum HealthStatus {
+        HEALTHY
+        SICK
+        INJURED
+        QUARANTINED
+        UNKNOWN
+        MONITORED
+    }
+
+    class AggregatedBehaviorPattern {
+        +PatternID: string
+        +AnimalID: string
+        +FarmID: string
+        +PatternType: PatternType
+        +StartTime: time.Time
+        +EndTime: time.Time
+        +Frequency: float64
+        +Intensity: float64
+        +Confidence: float64
+        +CrossFarmOccurrence: int
+        +GlobalPercentile: float64
+        +IsGlobalPattern(): bool
+        +CompareToCrossFarmData(): ComparisonResult
+        +GetGlobalDeviationScore(): float64
+        +GetPopulationNorms(): PopulationNorms
+    }
+
+    enum PatternType {
+        DAILY_ROUTINE
+        FEEDING_PATTERN
+        SOCIAL_INTERACTION
+        MOVEMENT_PATTERN
+        HEALTH_INDICATOR
+        ENVIRONMENTAL_RESPONSE
+        SEASONAL_BEHAVIOR
+        POPULATION_TREND
+    }
+}
+
+package "service.cloud" {
+    interface BehaviorAggregator {
+        +AggregateBehaviors(events: []BehaviorEvent): []AggregatedBehaviorPattern
+        +AnalyzeCrossFarmPatterns(farmIDs: []string, timeRange: TimeRange): []CrossFarmPattern
+        +DetectPopulationAnomalies(population: PopulationData): []PopulationAnomaly
+        +GetGlobalBehaviorTrends(timeRange: TimeRange): TrendAnalysis
+        +CompareFarmPerformance(farmIDs: []string): FarmComparison
+        +GeneratePopulationInsights(): []PopulationInsight
+    }
+
+    class CloudBehaviorAggregator {
+        -crossFarmAnalyzer: CrossFarmAnalyzer
+        -populationAnomalyDetector: PopulationAnomalyDetector
+        -globalPatternRepository: GlobalPatternRepository
+        -trendAnalyzer: TrendAnalyzer
+        -farmComparator: FarmComparator
+        -insightGenerator: InsightGenerator
+        -dataLakeConnector: DataLakeConnector
+        -streamProcessor: BehaviorStreamProcessor
+        +AggregateBehaviors(events: []BehaviorEvent): []AggregatedBehaviorPattern
+        +AnalyzeCrossFarmPatterns(farmIDs: []string, timeRange: TimeRange): []CrossFarmPattern
+        +DetectPopulationAnomalies(population: PopulationData): []PopulationAnomaly
+        +GetGlobalBehaviorTrends(timeRange: TimeRange): TrendAnalysis
+        +CompareFarmPerformance(farmIDs: []string): FarmComparison
+        +GeneratePopulationInsights(): []PopulationInsight
+        -validateCrossFarmData(data: []BehaviorEvent): ValidationResult
+        -enrichWithGlobalContext(patterns: []AggregatedBehaviorPattern): []AggregatedBehaviorPattern
+        -cacheAggregatedResults(results: []AggregatedBehaviorPattern): void
+    }
+
+    interface CrossFarmAnalyzer {
+        +AnalyzeCrossFarmCorrelations(farmData: map[string][]BehaviorEvent): []CrossFarmCorrelation
+        +DetectGlobalPatterns(allFarmData: []FarmBehaviorData): []GlobalPattern
+        +IdentifyOutlierFarms(farmData: map[string][]BehaviorEvent): []OutlierFarm
+        +GenerateBenchmarks(): FarmBenchmarks
+    }
+
+    class StatisticalCrossFarmAnalyzer {
+        -correlationEngine: CorrelationEngine
+        -outlierDetector: OutlierDetector
+        -benchmarkCalculator: BenchmarkCalculator
+        -geospatialAnalyzer: GeospatialAnalyzer
+        -seasonalityDetector: SeasonalityDetector
+        +AnalyzeCrossFarmCorrelations(farmData: map[string][]BehaviorEvent): []CrossFarmCorrelation
+        +DetectGlobalPatterns(allFarmData: []FarmBehaviorData): []GlobalPattern
+        +IdentifyOutlierFarms(farmData: map[string][]BehaviorEvent): []OutlierFarm
+        +GenerateBenchmarks(): FarmBenchmarks
+        -calculateCrossFarmCorrelation(farm1: []BehaviorEvent, farm2: []BehaviorEvent): CorrelationScore
+        -detectSeasonalPatterns(data: []BehaviorEvent): []SeasonalPattern
+        -analyzeGeographicInfluence(farmData: map[string][]BehaviorEvent): GeographicInfluence
+    }
+
+    interface PopulationAnomalyDetector {
+        +DetectPopulationAnomalies(population: PopulationData): []PopulationAnomaly
+        +AnalyzeHealthTrends(healthData: []HealthMetric): HealthTrendAnalysis
+        +DetectDiseaseOutbreaks(symptoms: []SymptomData): []OutbreakAlert
+        +MonitorPopulationHealth(): HealthReport
+    }
+
+    class MLPopulationAnomalyDetector {
+        -populationModel: PopulationMLModel
+        -healthTrendModel: HealthTrendModel
+        -outbreakDetector: OutbreakDetectionModel
+        -featureExtractor: PopulationFeatureExtractor
+        -alertThresholds: AlertThresholds
+        +DetectPopulationAnomalies(population: PopulationData): []PopulationAnomaly
+        +AnalyzeHealthTrends(healthData: []HealthMetric): HealthTrendAnalysis
+        +DetectDiseaseOutbreaks(symptoms: []SymptomData): []OutbreakAlert
+        +MonitorPopulationHealth(): HealthReport
+        -extractPopulationFeatures(population: PopulationData): PopulationFeatureVector
+        -predictPopulationHealth(features: PopulationFeatureVector): HealthPrediction
+        -correlateSymptoms(symptoms: []SymptomData): SymptomCorrelation
+        -updatePopulationModel(newData: PopulationData): error
+    }
+
+    class TrendAnalyzer {
+        -timeSeriesEngine: TimeSeriesEngine
+        -trendRepository: TrendRepository
+        -forecastingModel: ForecastingModel
+        +AnalyzeBehaviorTrends(data: []BehaviorEvent, timeRange: TimeRange): TrendAnalysis
+        +GenerateForecasts(historicalData: []BehaviorEvent): BehaviorForecast
+        +DetectTrendChanges(data: []BehaviorEvent): []TrendChange
+        +ComparePeriods(period1: TimeRange, period2: TimeRange): PeriodComparison
+        -buildTimeSeriesModel(data: []BehaviorEvent): TimeSeriesModel
+        -detectTrendBreaks(timeSeries: TimeSeries): []TrendBreak
+        -generateForecastConfidenceIntervals(forecast: BehaviorForecast): ConfidenceIntervals
+    }
+}
+
+package "repository.cloud" {
+    interface GlobalPatternRepository {
+        +SaveAggregatedPattern(pattern: AggregatedBehaviorPattern): error
+        +GetGlobalPatterns(criteria: PatternCriteria): []AggregatedBehaviorPattern
+        +GetCrossFarmPatterns(farmIDs: []string, timeRange: TimeRange): []CrossFarmPattern
+        +GetPopulationBenchmarks(): PopulationBenchmarks
+        +SaveCrossFarmCorrelation(correlation: CrossFarmCorrelation): error
+        +GetTrendData(timeRange: TimeRange): TrendData
+    }
+
+    class CloudDataWarehouseRepository {
+        -dwh: *sql.DB
+        -dataLake: DataLakeConnector
+        -cache: DistributedCache
+        -queryOptimizer: QueryOptimizer
+        -partitionManager: PartitionManager
+        +SaveAggregatedPattern(pattern: AggregatedBehaviorPattern): error
+        +GetGlobalPatterns(criteria: PatternCriteria): []AggregatedBehaviorPattern
+        +GetCrossFarmPatterns(farmIDs: []string, timeRange: TimeRange): []CrossFarmPattern
+        +GetPopulationBenchmarks(): PopulationBenchmarks
+        +SaveCrossFarmCorrelation(correlation: CrossFarmCorrelation): error
+        +GetTrendData(timeRange: TimeRange): TrendData
+        -buildOptimizedQuery(criteria: PatternCriteria): OptimizedQuery
+        -partitionDataByTimeAndFarm(data: []AggregatedBehaviorPattern): PartitionedData
+        -cacheFrequentlyAccessedData(data: interface{}): void
+        -executeParallelQueries(queries: []Query): []QueryResult
+    }
+}
+
+package "dto.cloud" {
+    class CrossFarmPattern {
+        +PatternID: string
+        +InvolvedFarms: []string
+        +PatternType: PatternType
+        +Correlation: float64
+        +Significance: float64
+        +GeographicSpread: GeographicSpread
+        +TemporalAlignment: TemporalAlignment
+        +ConfidenceLevel: float64
+        +GetPatternStrength(): float64
+        +IsStatisticallySignificant(): bool
+    }
+
+    class PopulationAnomaly {
+        +AnomalyID: string
+        +AffectedPopulation: PopulationSegment
+        +AnomalyType: PopulationAnomalyType
+        +Severity: SeverityLevel
+        +Confidence: float64
+        +EstimatedImpact: ImpactAssessment
+        +RecommendedActions: []ActionRecommendation
+        +CrossFarmSpread: SpreadAnalysis
+        +RequiresImmediateAction(): bool
+        +GetRiskLevel(): RiskLevel
+    }
+
+    class FarmComparison {
+        +ComparisonID: string
+        +Farms: []FarmData
+        +ComparisonMetrics: []ComparisonMetric
+        +BenchmarkDeviations: []BenchmarkDeviation
+        +PerformanceRankings: []FarmRanking
+        +Recommendations: []FarmRecommendation
+        +GetTopPerformers(): []FarmData
+        +GetUnderperformers(): []FarmData
+    }
+
+    class PopulationInsight {
+        +InsightID: string
+        +InsightType: InsightType
+        +Population: PopulationSegment
+        +Confidence: float64
+        +BusinessImpact: BusinessImpact
+        +ActionableRecommendations: []ActionRecommendation
+        +DataSources: []string
+        +ValidationStatus: ValidationStatus
+        +GetBusinessValue(): float64
+    }
+
+    enum PopulationAnomalyType {
+        HEALTH_OUTBREAK
+        BEHAVIORAL_SHIFT
+        PRODUCTIVITY_DECLINE
+        ENVIRONMENTAL_STRESS
+        GENETIC_VARIATION
+        MANAGEMENT_ISSUE
+    }
+
+    enum InsightType {
+        PERFORMANCE_OPTIMIZATION
+        HEALTH_PREDICTION
+        COST_REDUCTION
+        PRODUCTIVITY_IMPROVEMENT
+        RISK_MITIGATION
+        TREND_FORECAST
+    }
+}
+
+' Реализация интерфейсов
+CloudBehaviorAggregator ..|> BehaviorAggregator
+StatisticalCrossFarmAnalyzer ..|> CrossFarmAnalyzer
+MLPopulationAnomalyDetector ..|> PopulationAnomalyDetector
+CloudDataWarehouseRepository ..|> GlobalPatternRepository
+
+' Композиция и агрегация
+CloudBehaviorAggregator *-- CrossFarmAnalyzer
+CloudBehaviorAggregator *-- PopulationAnomalyDetector
+CloudBehaviorAggregator *-- TrendAnalyzer
+CloudBehaviorAggregator o-- GlobalPatternRepository
+
+' Использование доменных объектов
+CloudBehaviorAggregator ..> AggregatedBehaviorPattern : creates
+CloudBehaviorAggregator ..> CrossFarmPattern : uses
+StatisticalCrossFarmAnalyzer ..> CrossFarmPattern : creates
+MLPopulationAnomalyDetector ..> PopulationAnomaly : returns
+
+' Ассоциации
+BehaviorEvent --> BehaviorType
+BehaviorEvent --> Animal
+AggregatedBehaviorPattern --> PatternType
+Animal --> HealthStatus
+PopulationAnomaly --> PopulationAnomalyType
+PopulationInsight --> InsightType
+
+' Зависимости данных
+CloudBehaviorAggregator ..> BehaviorEvent : processes
+CloudBehaviorAggregator ..> FarmComparison : returns
+GlobalPatternRepository ..> AggregatedBehaviorPattern : stores/retrieves
+GlobalPatternRepository ..> CrossFarmPattern : stores/retrieves
+
+@enduml
+!include <C4/C4_Component>
+
+title Альтернативное решение: AI Orchestrator - Диаграмма кода (C4)
+
+note as N1
+  Класс-диаграмма компонента AI Orchestrator
+  из Cloud Video Analytics Service
+end note
+
+package "orchestration.core" {
+    interface AIOrchestrator {
+        +ProcessVideoRequest(request: VideoAnalysisRequest): VideoAnalysisResponse
+        +RegisterAIService(service: AIServiceProvider): error
+        +GetAvailableServices(capability: AICapability): []AIServiceProvider
+        +GetServiceHealth(): HealthReport
+        +OptimizeServiceSelection(request: VideoAnalysisRequest): AIServiceProvider
+        +GetPerformanceMetrics(): PerformanceMetrics
+    }
+
+    class CloudAIOrchestrator {
+        -serviceRegistry: ServiceRegistry
+        -loadBalancer: LoadBalancer
+        -circuitBreaker: CircuitBreaker
+        -costOptimizer: CostOptimizer
+        -performanceTracker: PerformanceTracker
+        -requestCache: RequestCache
+        -rateLimiter: RateLimiter
+        +ProcessVideoRequest(request: VideoAnalysisRequest): VideoAnalysisResponse
+        +RegisterAIService(service: AIServiceProvider): error
+        +GetAvailableServices(capability: AICapability): []AIServiceProvider
+        +GetServiceHealth(): HealthReport
+        +OptimizeServiceSelection(request: VideoAnalysisRequest): AIServiceProvider
+        +GetPerformanceMetrics(): PerformanceMetrics
+        -validateRequest(request: VideoAnalysisRequest): ValidationResult
+        -aggregateResponses(responses: []ServiceResponse): VideoAnalysisResponse
+        -handleFailover(failedService: AIServiceProvider): AIServiceProvider
+        -cacheResponse(request: VideoAnalysisRequest, response: VideoAnalysisResponse): void
+    }
+
+    class ServiceRegistry {
+        -services: map[string]AIServiceProvider
+        -healthMonitor: HealthMonitor
+        -capabilityIndex: map[AICapability][]string
+        -serviceVersions: map[string]ServiceVersion
+        +RegisterService(service: AIServiceProvider): error
+        +UnregisterService(serviceID: string): error
+        +GetServiceByID(serviceID: string): AIServiceProvider
+        +GetServicesByCapability(capability: AICapability): []AIServiceProvider
+        +UpdateServiceHealth(serviceID: string, health: HealthStatus): void
+        +GetAllHealthyServices(): []AIServiceProvider
+        +GetServiceVersion(serviceID: string): ServiceVersion
+        -indexServiceCapabilities(service: AIServiceProvider): void
+        -validateServiceConfiguration(service: AIServiceProvider): error
+        -notifyServiceChange(serviceID: string, change: ServiceChange): void
+    }
+
+    class LoadBalancer {
+        -strategy: BalancingStrategy
+        -serviceMetrics: map[string]ServiceMetrics
+        -weightCalculator: WeightCalculator
+        -trafficDistributor: TrafficDistributor
+        +SelectService(services: []AIServiceProvider, request: VideoAnalysisRequest): AIServiceProvider
+        +UpdateServiceMetrics(serviceID: string, metrics: ServiceMetrics): void
+        +GetServiceLoad(serviceID: string): LoadMetrics
+        +RebalanceServices(): void
+        +SetBalancingStrategy(strategy: BalancingStrategy): void
+        -calculateServiceScore(service: AIServiceProvider, request: VideoAnalysisRequest): float64
+        -applyLoadBalancingStrategy(services: []AIServiceProvider): AIServiceProvider
+        -considerLatencyFactors(service: AIServiceProvider): float64
+    }
+
+    enum BalancingStrategy {
+        ROUND_ROBIN
+        WEIGHTED_ROUND_ROBIN
+        LEAST_CONNECTIONS
+        LEAST_RESPONSE_TIME
+        COST_OPTIMIZED
+        CAPABILITY_BASED
+        GEOGRAPHIC_PROXIMITY
+    }
+}
+
+package "services.providers" {
+    interface AIServiceProvider {
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+        +GetRegion(): string
+        +GetServiceLevel(): ServiceLevel
+    }
+
+    class AWSRekognitionProvider {
+        -client: rekognition.Client
+        -config: AWSConfig
+        -rateLimiter: RateLimiter
+        -credentialsManager: CredentialsManager
+        -region: string
+        -costCalculator: AWSCostCalculator
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+        +GetRegion(): string
+        +GetServiceLevel(): ServiceLevel
+        -convertToAWSRequest(video: VideoData): rekognition.StartLabelDetectionInput
+        -parseAWSResponse(response: rekognition.GetLabelDetectionOutput): ServiceResponse
+        -handleAWSError(err: error): ServiceError
+        -refreshCredentials(): error
+    }
+
+    class AzureCognitiveProvider {
+        -client: computervision.Client
+        -config: AzureConfig
+        -tokenManager: TokenManager
+        -requestThrottler: RequestThrottler
+        -endpoint: string
+        -subscriptionKey: string
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+        +GetRegion(): string
+        +GetServiceLevel(): ServiceLevel
+        -prepareAzureRequest(video: VideoData): computervision.VideoAnalysisRequest
+        -processAzureResponse(response: computervision.VideoAnalysisResult): ServiceResponse
+        -refreshAccessToken(): error
+        -handleAzureThrottling(response: http.Response): error
+    }
+
+    class GoogleVideoIntelligenceProvider {
+        -client: videointelligence.Client
+        -config: GoogleConfig
+        -quotaManager: QuotaManager
+        -operationTracker: OperationTracker
+        -projectID: string
+        -keyFile: string
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+        +GetRegion(): string
+        +GetServiceLevel(): ServiceLevel
+        -buildGoogleRequest(video: VideoData): videointelligence.AnnotateVideoRequest
+        -extractGoogleResults(response: videointelligence.AnnotateVideoResponse): ServiceResponse
+        -trackLongRunningOperation(operation: videointelligence.Operation): ServiceResponse
+        -checkQuotaLimits(): error
+    }
+
+    enum AICapability {
+        OBJECT_DETECTION
+        ANIMAL_BEHAVIOR_ANALYSIS
+        ANOMALY_DETECTION
+        LIVESTOCK_COUNTING
+        HEALTH_ASSESSMENT
+        ACTIVITY_RECOGNITION
+        FACIAL_RECOGNITION
+        SCENE_ANALYSIS
+        MOTION_TRACKING
+    }
+
+    enum ServiceLevel {
+        BASIC
+        STANDARD
+        PREMIUM
+        ENTERPRISE
+    }
+}
+
+package "resilience.patterns" {
+    class CircuitBreaker {
+        -state: CircuitState
+        -failureThreshold: int
+        -successThreshold: int
+        -timeout: time.Duration
+        -failureCount: int
+        -successCount: int
+        -lastFailureTime: time.Time
+        -stateChangeListeners: []StateChangeListener
+        +Execute(operation: func() (interface{}, error)): (interface{}, error)
+        +GetState(): CircuitState
+        +GetMetrics(): CircuitBreakerMetrics
+        +Reset(): void
+        +ForceOpen(): void
+        +ForceClose(): void
+        -shouldTrip(): bool
+        -shouldAttemptReset(): bool
+        -recordSuccess(): void
+        -recordFailure(): void
+        -notifyStateChange(oldState: CircuitState, newState: CircuitState): void
+    }
+
+    enum CircuitState {
+        CLOSED
+        OPEN
+        HALF_OPEN
+    }
+
+    class CostOptimizer {
+        -budgetManager: BudgetManager
+        -pricingDatabase: PricingDatabase
+        -usageTracker: UsageTracker
+        -costPredictor: CostPredictor
+        -alertManager: CostAlertManager
+        +OptimizeServiceSelection(request: VideoAnalysisRequest, services: []AIServiceProvider): AIServiceProvider
+        +TrackServiceCost(serviceID: string, cost: float64): void
+        +GetCostReport(timeRange: TimeRange): CostReport
+        +PredictCosts(request: VideoAnalysisRequest): CostPrediction
+        +IsWithinBudget(serviceID: string, estimatedCost: float64): bool
+        +SetBudgetLimit(serviceID: string, limit: float64): void
+        -calculateCostPerService(request: VideoAnalysisRequest, service: AIServiceProvider): float64
+        -applyBudgetConstraints(services: []AIServiceProvider): []AIServiceProvider
+        -optimizeForCostEfficiency(services: []AIServiceProvider): []AIServiceProvider
+    }
+
+    class PerformanceTracker {
+        -metricsCollector: MetricsCollector
+        -performanceHistory: map[string][]PerformanceMetric
+        -benchmarkData: BenchmarkData
+        -anomalyDetector: PerformanceAnomalyDetector
+        +TrackServicePerformance(serviceID: string, metrics: PerformanceMetric): void
+        +GetServicePerformance(serviceID: string, timeRange: TimeRange): PerformanceReport
+        +CompareServicePerformance(services: []string): PerformanceComparison
+        +GetPerformanceTrends(serviceID: string): TrendAnalysis
+        +DetectPerformanceRegression(serviceID: string): []PerformanceAlert
+        -calculatePerformanceScore(metrics: PerformanceMetric): float64
+        -detectPerformanceAnomalies(serviceID: string): []PerformanceAnomaly
+        -generatePerformanceInsights(data: PerformanceData): []Insight
+    }
+}
+
+package "dto.models" {
+    class VideoAnalysisRequest {
+        +RequestID: string
+        +VideoData: VideoData
+        +RequiredCapabilities: []AICapability
+        +Priority: RequestPriority
+        +MaxCost: float64
+        +Timeout: time.Duration
+        +AnalysisOptions: AnalysisOptions
+        +FarmID: string
+        +RegionPreference: string
+        +QualityRequirement: QualityLevel
+        +Validate(): error
+        +GetEstimatedComplexity(): ComplexityLevel
+        +Get@startuml Альтернативное_решение_C4_AIOrchestrator
+!include <C4/C4_Component>
+
+title Альтернативное решение: AI Orchestrator - Диаграмма кода (C4)
+
+note as N1
+  Класс-диаграмма компонента AI Orchestrator
+  из Cloud Video Analytics Service
+end note
+
+package "orchestration.core" {
+    interface AIOrchestrator {
+        +ProcessVideoRequest(request: VideoAnalysisRequest): VideoAnalysisResponse
+        +RegisterAIService(service: AIServiceProvider): error
+        +GetAvailableServices(capability: AICapability): []AIServiceProvider
+        +GetServiceHealth(): HealthReport
+        +OptimizeServiceSelection(request: VideoAnalysisRequest): AIServiceProvider
+    }
+
+    class CloudAIOrchestrator {
+        -serviceRegistry: ServiceRegistry
+        -loadBalancer: LoadBalancer
+        -circuitBreaker: CircuitBreaker
+        -costOptimizer: CostOptimizer
+        -performanceTracker: PerformanceTracker
+        +ProcessVideoRequest(request: VideoAnalysisRequest): VideoAnalysisResponse
+        +RegisterAIService(service: AIServiceProvider): error
+        +GetAvailableServices(capability: AICapability): []AIServiceProvider
+        +GetServiceHealth(): HealthReport
+        +OptimizeServiceSelection(request: VideoAnalysisRequest): AIServiceProvider
+        -validateRequest(request: VideoAnalysisRequest): ValidationResult
+        -aggregateResponses(responses: []ServiceResponse): VideoAnalysisResponse
+        -handleFailover(failedService: AIServiceProvider): AIServiceProvider
+    }
+
+    class ServiceRegistry {
+        -services: map[string]AIServiceProvider
+        -healthMonitor: HealthMonitor
+        -capabilityIndex: map[AICapability][]string
+        +RegisterService(service: AIServiceProvider): error
+        +UnregisterService(serviceID: string): error
+        +GetServiceByID(serviceID: string): AIServiceProvider
+        +GetServicesByCapability(capability: AICapability): []AIServiceProvider
+        +UpdateServiceHealth(serviceID: string, health: HealthStatus): void
+        +GetAllHealthyServices(): []AIServiceProvider
+        -indexServiceCapabilities(service: AIServiceProvider): void
+        -validateServiceConfiguration(service: AIServiceProvider): error
+    }
+
+    class LoadBalancer {
+        -strategy: BalancingStrategy
+        -serviceMetrics: map[string]ServiceMetrics
+        -weightCalculator: WeightCalculator
+        +SelectService(services: []AIServiceProvider, request: VideoAnalysisRequest): AIServiceProvider
+        +UpdateServiceMetrics(serviceID: string, metrics: ServiceMetrics): void
+        +GetServiceLoad(serviceID: string): LoadMetrics
+        +RebalanceServices(): void
+        -calculateServiceScore(service: AIServiceProvider, request: VideoAnalysisRequest): float64
+        -applyLoadBalancingStrategy(services: []AIServiceProvider): AIServiceProvider
+    }
+
+    enum BalancingStrategy {
+        ROUND_ROBIN
+        WEIGHTED_ROUND_ROBIN
+        LEAST_CONNECTIONS
+        LEAST_RESPONSE_TIME
+        COST_OPTIMIZED
+        CAPABILITY_BASED
+    }
+}
+
+package "services.providers" {
+    interface AIServiceProvider {
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+    }
+
+    class AWSRekognitionProvider {
+        -client: rekognition.Client
+        -config: AWSConfig
+        -rateLimiter: RateLimiter
+        -credentialsManager: CredentialsManager
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+        -convertToAWSRequest(video: VideoData): rekognition.StartLabelDetectionInput
+        -parseAWSResponse(response: rekognition.GetLabelDetectionOutput): ServiceResponse
+        -handleAWSError(err: error): ServiceError
+    }
+
+    class AzureCognitiveProvider {
+        -client: computervision.Client
+        -config: AzureConfig
+        -tokenManager: TokenManager
+        -requestThrottler: RequestThrottler
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+        -prepareAzureRequest(video: VideoData): computervision.VideoAnalysisRequest
+        -processAzureResponse(response: computervision.VideoAnalysisResult): ServiceResponse
+        -refreshAccessToken(): error
+    }
+
+    class GoogleVideoIntelligenceProvider {
+        -client: videointelligence.Client
+        -config: GoogleConfig
+        -quotaManager: QuotaManager
+        -operationTracker: OperationTracker
+        +GetServiceID(): string
+        +GetCapabilities(): []AICapability
+        +AnalyzeVideo(video: VideoData, options: AnalysisOptions): ServiceResponse
+        +GetPricing(request: VideoAnalysisRequest): PricingInfo
+        +IsHealthy(): bool
+        +GetServiceLimits(): ServiceLimits
+        +SupportsBatchProcessing(): bool
+        -buildGoogleRequest(video: VideoData): videointelligence.AnnotateVideoRequest
+        -extractGoogleResults(response: videointelligence.AnnotateVideoResponse): ServiceResponse
+        -trackLongRunningOperation(operation: videointelligence.Operation): ServiceResponse
+    }
+
+    enum AICapability {
+        OBJECT_DETECTION
+        ANIMAL_BEHAVIOR_ANALYSIS
+        ANOMALY_DETECTION
+        LIVESTOCK_COUNTING
+        HEALTH_ASSESSMENT
+        ACTIVITY_RECOGNITION
+        FACIAL_RECOGNITION
+        SCENE_ANALYSIS
+    }
+}
+
+package "resilience.patterns" {
+    class CircuitBreaker {
+        -state: CircuitState
+        -failureThreshold: int
+        -successThreshold: int
+        -timeout: time.Duration
+        -failureCount: int
+        -lastFailureTime: time.Time
+        +Execute(operation: func() (interface{}, error)): (interface{}, error)
+        +GetState(): CircuitState
+        +GetMetrics(): CircuitBreakerMetrics
+        +Reset(): void
+        -shouldTrip(): bool
+        -shouldAttemptReset(): bool
+        -recordSuccess(): void
+        -recordFailure(): void
+    }
+
+    enum CircuitState {
+        CLOSED
+        OPEN
+        HALF_OPEN
+    }
+
+    class CostOptimizer {
+        -budgetManager: BudgetManager
+        -pricingDatabase: PricingDatabase
+        -usageTracker: UsageTracker
+        -costPredictor: CostPredictor
+        +OptimizeServiceSelection(request: VideoAnalysisRequest, services: []AIServiceProvider): AIServiceProvider
+        +TrackServiceCost(serviceID: string, cost: float64): void
+        +GetCostReport(timeRange: TimeRange): CostReport
+        +PredictCosts(request: VideoAnalysisRequest): CostPrediction
+        +IsWithinBudget(serviceID: string, estimatedCost: float64): bool
+        -calculateCostPerService(request: VideoAnalysisRequest, service: AIServiceProvider): float64
+        -applyBudgetConstraints(services: []AIServiceProvider): []AIServiceProvider
+    }
+
+    class PerformanceTracker {
+        -metricsCollector: MetricsCollector
+        -performanceHistory: map[string][]PerformanceMetric
+        -benchmarkData: BenchmarkData
+        +TrackServicePerformance(serviceID: string, metrics: PerformanceMetric): void
+        +GetServicePerformance(serviceID: string, timeRange: TimeRange): PerformanceReport
+        +CompareServicePerformance(services: []string): PerformanceComparison
+        +GetPerformanceTrends(serviceID: string): TrendAnalysis
+        -calculatePerformanceScore(metrics: PerformanceMetric): float64
+        -detectPerformanceAnomalies(serviceID: string): []PerformanceAnomaly
+    }
+}
+
+package "dto.models" {
+    class VideoAnalysisRequest {
+        +RequestID: string
+        +VideoData: VideoData
+        +RequiredCapabilities: []AICapability
+        +Priority: RequestPriority
+        +MaxCost: float64
+        +Timeout: time.Duration
+        +AnalysisOptions: AnalysisOptions
+        +FarmID: string
+        +Validate(): error
+        +GetEstimatedComplexity(): ComplexityLevel
+    }
+
+    class VideoAnalysisResponse {
+        +RequestID: string
+        +ServiceUsed: string
+        +Results: []AnalysisResult
+        +ProcessingTime: time.Duration
+        +Cost: float64
+        +Confidence: float64
+        +ErrorDetails: []ServiceError
+        +Metadata: ResponseMetadata
+        +IsSuccessful(): bool
+        +GetQualityScore(): float64
+    }
+
+    class ServiceResponse {
+        +ServiceID: string
+        +DetectedObjects: []DetectedObject
+        +BehaviorAnalysis: []BehaviorResult
+        +Anomalies: []AnomalyResult
+        +LivestockCount: int
+        +Confidence: float64
+        +ProcessingTime: time.Duration
+        +Cost: float64
+        +RawResponse: interface{}
+    }
+
+    class HealthReport {
+        +OverallHealth: HealthStatus
+        +ServiceHealths: map[string]ServiceHealth
+        +LastUpdated: time.Time
+        +FailedServices: []string
+        +PerformanceMetrics: SystemPerformanceMetrics
+        +GetHealthSummary(): string
+    }
+
+    enum RequestPriority {
+        LOW
+        NORMAL
+        HIGH
+        CRITICAL
+        EMERGENCY
+    }
+
+    enum HealthStatus {
+        HEALTHY
+        DEGRADED
+        UNHEALTHY
+        UNKNOWN
+    }
+}
+
+' Реализация интерфейсов
+CloudAIOrchestrator ..|> AIOrchestrator
+AWSRekognitionProvider ..|> AIServiceProvider
+AzureCognitiveProvider ..|> AIServiceProvider
+GoogleVideoIntelligenceProvider ..|> AIServiceProvider
+
+' Композиция и агрегация
+CloudAIOrchestrator *-- ServiceRegistry
+CloudAIOrchestrator *-- LoadBalancer
+CloudAIOrchestrator *-- CircuitBreaker
+CloudAIOrchestrator *-- CostOptimizer
+CloudAIOrchestrator *-- PerformanceTracker
+ServiceRegistry o-- AIServiceProvider
+LoadBalancer --> BalancingStrategy
+CircuitBreaker --> CircuitState
+
+' Ассоциации
+AIServiceProvider --> AICapability
+VideoAnalysisRequest --> RequestPriority
+VideoAnalysisRequest --> AICapability
+VideoAnalysisResponse --> ServiceResponse
+HealthReport --> HealthStatus
+
+' Зависимости данных
+CloudAIOrchestrator ..> VideoAnalysisRequest : processes
+CloudAIOrchestrator ..> VideoAnalysisResponse : returns
+AIServiceProvider ..> ServiceResponse : produces
+ServiceRegistry ..> HealthReport : generates
+CostOptimizer ..> CostReport : generates
+PerformanceTracker ..> PerformanceReport : generates
+
+@enduml4_StreamProcessor
+!include <C4/C4_Component>
+
+title Альтернативное решение: Stream Processor - Диаграмма кода (C4)
+
+note as N1
+  Класс-диаграмма компонента Stream Processor
+  из Data Aggregation Service (облачное решение)
+end note
+
+package "streaming.core" {
+    interface StreamProcessor {
+        +ProcessStream(input: DataStream): ProcessedStream
+        +RegisterProcessor(processor: DataProcessor): error
+        +StartProcessing(): error
+        +StopProcessing(): error
+        +GetProcessingStats(): ProcessingStats
+    }
+
+    class KafkaStreamProcessor {
+        -consumer: KafkaConsumer
+        -producer: KafkaProducer
+        -processors: map[string]DataProcessor
+        -config: StreamConfig
+        -metrics: MetricsCollector
+        +ProcessStream(input: DataStream): ProcessedStream
+        +RegisterProcessor(processor: DataProcessor): error
+        +StartProcessing(): error
+        +StopProcessing(): error
+        +GetProcessingStats(): ProcessingStats
+        -createTopology(): StreamTopology
+        -handleRebalance(partitions: []TopicPartition): void
+        -commitOffsets(): error
+    }
+
+    class StreamTopology {
+        +nodes: []StreamNode
+        +edges: []StreamEdge
+        +Build(processors: []DataProcessor): StreamTopology
+        +Validate(): error
+        +GetExecutionPlan(): ExecutionPlan
+        -optimizeTopology(): void
+        -detectCycles(): bool
+    }
+
+    class StreamNode {
+        +ID: string
+        +Processor: DataProcessor
+        +InputTopics: []string
+        +OutputTopics: []string
+        +Parallelism: int
+        +ProcessData(data: StreamData): StreamData
+    }
+}
+
+package "processing.pipeline" {
+    interface DataProcessor {
+        +Process(data: StreamData): StreamData
+        +GetProcessorType(): ProcessorType
+        +Configure(config: ProcessorConfig): error
+        +GetMetrics(): ProcessorMetrics
+    }
+
+    class VideoDataProcessor {
+        -aiClient: CloudAIClient
+        -frameExtractor: FrameExtractor
+        -validator: VideoValidator
+        +Process(data: StreamData): StreamData
+        +GetProcessorType(): ProcessorType
+        +Configure(config: ProcessorConfig): error
+        +GetMetrics(): ProcessorMetrics
+        -extractKeyFrames(video: VideoData): []Frame
+        -analyzeFrames(frames: []Frame): AnalysisResult
+        -validateVideoQuality(video: VideoData): ValidationResult
+    }
+
+    class SensorDataProcessor {
+        -aggregator: DataAggregator
+        -anomalyDetector: AnomalyDetector
+        -threshold: ThresholdConfig
+        +Process(data: StreamData): StreamData
+        +GetProcessorType(): ProcessorType
+        +Configure(config: ProcessorConfig): error
+        +GetMetrics(): ProcessorMetrics
+        -aggregateByTimeWindow(data: []SensorReading): AggregatedData
+        -detectAnomalies(data: AggregatedData): []Anomaly
+        -enrichWithMetadata(data: StreamData): StreamData
+    }
+
+    class EventDataProcessor {
+        -eventClassifier: EventClassifier
+        -ruleEngine: RuleEngine
+        -eventStore: EventStore
+        +Process(data: StreamData): StreamData
+        +GetProcessorType(): ProcessorType
+        +Configure(config: ProcessorConfig): error
+        +GetMetrics(): ProcessorMetrics
+        -classifyEvent(event: RawEvent): ClassifiedEvent
+        -applyBusinessRules(event: ClassifiedEvent): ProcessedEvent
+        -correlateEvents(events: []ProcessedEvent): []CorrelatedEvent
+    }
+
+    enum ProcessorType {
+        VIDEO_PROCESSOR
+        SENSOR_PROCESSOR
+        EVENT_PROCESSOR
+        AGGREGATION_PROCESSOR
+        TRANSFORMATION_PROCESSOR
+    }
+}
+
+package "windowing" {
+    interface WindowManager {
+        +CreateWindow(type: WindowType, size: time.Duration): Window
+        +ProcessWindow(window: Window, data: []StreamData): WindowResult
+        +TriggerWindow(window: Window): WindowResult
+    }
+
+    class TumblingWindowManager {
+        -windowSize: time.Duration
+        -activeWindows: map[string]Window
+        -watermarkManager: WatermarkManager
+        +CreateWindow(type: WindowType, size: time.Duration): Window
+        +ProcessWindow(window: Window, data: []StreamData): WindowResult
+        +TriggerWindow(window: Window): WindowResult
+        -evictExpiredWindows(): void
+        -updateWatermark(timestamp: time.Time): void
+    }
+
+    class SlidingWindowManager {
+        -windowSize: time.Duration
+        -slideInterval: time.Duration
+        -windowBuffer: CircularBuffer
+        +CreateWindow(type: WindowType, size: time.Duration): Window
+        +ProcessWindow(window: Window, data: []StreamData): WindowResult
+        +TriggerWindow(window: Window): WindowResult
+        -slideWindow(): void
+        -maintainBuffer(): void
+    }
+
+    class Window {
+        +ID: string
+        +StartTime: time.Time
+        +EndTime: time.Time
+        +WindowType: WindowType
+        +Data: []StreamData
+        +State: WindowState
+        +AddData(data: StreamData): void
+        +IsComplete(): bool
+        +GetResult(): WindowResult
+    }
+
+    enum WindowType {
+        TUMBLING
+        SLIDING
+        SESSION
+        GLOBAL
+    }
+
+    enum WindowState {
+        OPEN
+        TRIGGERED
+        CLOSED
+        EXPIRED
+    }
+}
+
+package "state.management" {
+    interface StateStore {
+        +Put(key: string, value: interface{}): error
+        +Get(key: string): (interface{}, error)
+        +Delete(key: string): error
+        +Range(startKey: string, endKey: string): Iterator
+        +Flush(): error
+    }
+
+    class RocksDBStateStore {
+        -db: RocksDBInstance
+        -changelogTopic: string
+        -restoreManager: RestoreManager
+        +Put(key: string, value: interface{}): error
+        +Get(key: string): (interface{}, error)
+        +Delete(key: string): error
+        +Range(startKey: string, endKey: string): Iterator
+        +Flush(): error
+        -serialize(value: interface{}): []byte
+        -deserialize(data: []byte): interface{}
+        -backup(): error
+    }
+
+    class ProcessingState {
+        +ProcessorID: string
+        +LastProcessedOffset: int64
+        +LastProcessedTimestamp: time.Time
+        +AggregationResults: map[string]interface{}
+        +ErrorCount: int
+        +UpdateOffset(offset: int64): void
+        +AddError(err: error): void
+        +GetHealthStatus(): HealthStatus
+    }
+}
+
+package "dto" {
+    class StreamData {
+        +ID: string
+        +Timestamp: time.Time
+        +Source: string
+        +DataType: DataType
+        +Payload: []byte
+        +Headers: map[string]string
+        +PartitionKey: string
+        +GetTypedPayload(target: interface{}): error
+        +AddHeader(key: string, value: string): void
+    }
+
+    class ProcessedStream {
+        +OriginalData: StreamData
+        +ProcessedData: []StreamData
+        +ProcessingMetadata: ProcessingMetadata
+        +Errors: []ProcessingError
+        +ProcessingTime: time.Duration
+        +IsSuccessful(): bool
+    }
+
+    class ProcessingStats {
+        +ProcessedRecords: int64
+        +FailedRecords: int64
+        +AverageLatency: time.Duration
+        +ThroughputPerSecond: float64
+        +LastProcessedTimestamp: time.Time
+        +ErrorRate: float64
+        +GetEfficiency(): float64
+    }
+
+    enum DataType {
+        VIDEO_STREAM
+        SENSOR_DATA
+        EVENT_DATA
+        TELEMETRY
+        METADATA
+    }
+}
+
+' Реализация интерфейсов
+KafkaStreamProcessor ..|> StreamProcessor
+VideoDataProcessor ..|> DataProcessor
+SensorDataProcessor ..|> DataProcessor
+EventDataProcessor ..|> DataProcessor
+TumblingWindowManager ..|> WindowManager
+SlidingWindowManager ..|> WindowManager
+RocksDBStateStore ..|> StateStore
+
+' Композиция и агрегация
+KafkaStreamProcessor *-- StreamTopology
+KafkaStreamProcessor o-- DataProcessor
+StreamTopology *-- StreamNode
+StreamNode *-- DataProcessor
+KafkaStreamProcessor o-- WindowManager
+WindowManager *-- Window
+
+' Ассоциации
+StreamNode --> ProcessorType
+DataProcessor --> ProcessorType
+Window --> WindowType
+Window --> WindowState
+StreamData --> DataType
+ProcessedStream --> StreamData
+
+' Зависимости
+KafkaStreamProcessor ..> StreamData : processes
+DataProcessor ..> StreamData : transforms
+WindowManager ..> WindowResult : produces
+StateStore ..> ProcessingState : manages
+
+@enduml

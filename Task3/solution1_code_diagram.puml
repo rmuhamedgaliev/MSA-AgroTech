@@ -1,0 +1,282 @@
+@startuml Основное_решение_C4_BehaviorAnalyzer
+!include <C4/C4_Component>
+
+title Основное решение: Behavior Analyzer - Диаграмма кода (C4)
+
+note as N1
+  Класс-диаграмма компонента Behavior Analyzer
+  из Edge Video Analytics Service
+end note
+
+package "domain.model" {
+    class Animal {
+        +ID: string
+        +TagID: string
+        +Species: AnimalType
+        +Age: int
+        +Weight: float64
+        +HealthStatus: HealthStatus
+        +LastSeen: time.Time
+        +Position: Point3D
+        +MovementHistory: []MovementPoint
+        +IsHealthy(): bool
+        +UpdatePosition(pos: Point3D): void
+        +CalculateMovementSpeed(): float64
+        +GetActivityLevel(): ActivityLevel
+    }
+
+    class BehaviorEvent {
+        +ID: string
+        +AnimalID: string
+        +Timestamp: time.Time
+        +BehaviorType: BehaviorType
+        +Confidence: float64
+        +Duration: time.Duration
+        +Location: Point3D
+        +Metadata: map[string]interface{}
+        +IsAnomalous(): bool
+        +GetSeverity(): SeverityLevel
+        +RequiresImmedateAction(): bool
+    }
+
+    enum BehaviorType {
+        FEEDING
+        DRINKING
+        RESTING
+        MOVING
+        AGGRESSIVE
+        MATING
+        DISTRESSED
+        SICK
+        SOCIAL_INTERACTION
+    }
+
+    enum HealthStatus {
+        HEALTHY
+        SICK
+        INJURED
+        QUARANTINED
+        UNKNOWN
+    }
+
+    class BehaviorPattern {
+        +PatternID: string
+        +AnimalID: string
+        +PatternType: PatternType
+        +StartTime: time.Time
+        +EndTime: time.Time
+        +Frequency: float64
+        +Intensity: float64
+        +Confidence: float64
+        +IsNormalPattern(): bool
+        +DetectAnomaly(threshold: float64): bool
+        +GetDeviationScore(): float64
+    }
+
+    enum PatternType {
+        DAILY_ROUTINE
+        FEEDING_PATTERN
+        SOCIAL_INTERACTION
+        MOVEMENT_PATTERN
+        HEALTH_INDICATOR
+        ENVIRONMENTAL_RESPONSE
+    }
+}
+
+package "service.local" {
+    interface BehaviorAnalyzer {
+        +AnalyzeBehavior(events: []AIDetectionEvent): []BehaviorEvent
+        +DetectPatterns(animalID: string, timeRange: TimeRange): []BehaviorPattern
+        +ClassifyAnomaly(behavior: BehaviorEvent): AnomalyResult
+        +GetAnimalBehaviorHistory(animalID: string): BehaviorHistory
+        +UpdateBehaviorRules(rules: []BehaviorRule): error
+    }
+
+    class EdgeBehaviorAnalyzer {
+        -patternDetector: LocalPatternDetector
+        -anomalyClassifier: LocalAnomalyClassifier
+        -behaviorRepository: LocalBehaviorRepository
+        -ruleEngine: LocalRuleEngine
+        -configService: EdgeConfigService
+        -metricsCollector: LocalMetricsCollector
+        +AnalyzeBehavior(events: []AIDetectionEvent): []BehaviorEvent
+        +DetectPatterns(animalID: string, timeRange: TimeRange): []BehaviorPattern
+        +ClassifyAnomaly(behavior: BehaviorEvent): AnomalyResult
+        +GetAnimalBehaviorHistory(animalID: string): BehaviorHistory
+        +UpdateBehaviorRules(rules: []BehaviorRule): error
+        -validateInput(events: []AIDetectionEvent): error
+        -enrichBehaviorData(behavior: BehaviorEvent): BehaviorEvent
+        -cacheResults(results: []BehaviorEvent): void
+    }
+
+    interface LocalPatternDetector {
+        +DetectDailyPatterns(behaviors: []BehaviorEvent): []BehaviorPattern
+        +DetectSocialPatterns(behaviors: []BehaviorEvent): []BehaviorPattern
+        +DetectHealthPatterns(behaviors: []BehaviorEvent): []BehaviorPattern
+        +UpdatePatternModels(newData: []BehaviorEvent): error
+    }
+
+    class StatisticalPatternDetector {
+        -windowSize: time.Duration
+        -confidenceThreshold: float64
+        -historyDepth: int
+        -modelCache: ModelCache
+        -statisticsEngine: StatisticsEngine
+        +DetectDailyPatterns(behaviors: []BehaviorEvent): []BehaviorPattern
+        +DetectSocialPatterns(behaviors: []BehaviorEvent): []BehaviorPattern
+        +DetectHealthPatterns(behaviors: []BehaviorEvent): []BehaviorPattern
+        +UpdatePatternModels(newData: []BehaviorEvent): error
+        -calculateMovingAverage(values: []float64): float64
+        -detectOutliers(data: []DataPoint): []Outlier
+        -buildTimeSeriesModel(data: []BehaviorEvent): TimeSeriesModel
+        -persistModel(model: TimeSeriesModel): error
+    }
+
+    interface LocalAnomalyClassifier {
+        +ClassifyAnomaly(behavior: BehaviorEvent): AnomalyResult
+        +UpdateLocalModel(trainingData: []BehaviorEvent): error
+        +GetModelAccuracy(): float64
+        +IsModelOutdated(): bool
+    }
+
+    class EdgeMLAnomalyClassifier {
+        -localModel: LocalMLModel
+        -featureExtractor: LocalFeatureExtractor
+        -threshold: float64
+        -lastModelUpdate: time.Time
+        -modelPath: string
+        +ClassifyAnomaly(behavior: BehaviorEvent): AnomalyResult
+        +UpdateLocalModel(trainingData: []BehaviorEvent): error
+        +GetModelAccuracy(): float64
+        +IsModelOutdated(): bool
+        -extractFeatures(behavior: BehaviorEvent): FeatureVector
+        -predictAnomaly(features: FeatureVector): PredictionResult
+        -saveModelToDisk(model: LocalMLModel): error
+        -loadModelFromDisk(): error
+    }
+
+    class LocalRuleEngine {
+        -rules: []BehaviorRule
+        -ruleCache: RuleCache
+        +EvaluateRules(behavior: BehaviorEvent): []RuleMatch
+        +AddRule(rule: BehaviorRule): error
+        +RemoveRule(ruleID: string): error
+        +UpdateRule(rule: BehaviorRule): error
+        +GetActiveRules(): []BehaviorRule
+        -compileRule(rule: BehaviorRule): CompiledRule
+        -executeRule(rule: CompiledRule, behavior: BehaviorEvent): RuleResult
+    }
+}
+
+package "repository.local" {
+    interface LocalBehaviorRepository {
+        +SaveBehaviorEvent(event: BehaviorEvent): error
+        +GetBehaviorHistory(animalID: string, timeRange: TimeRange): []BehaviorEvent
+        +SaveBehaviorPattern(pattern: BehaviorPattern): error
+        +GetAnimalPatterns(animalID: string): []BehaviorPattern
+        +GetLocalAnomalies(timeRange: TimeRange): []BehaviorEvent
+        +CompactOldData(retentionPeriod: time.Duration): error
+    }
+
+    class SQLiteBehaviorRepository {
+        -db: *sql.DB
+        -logger: Logger
+        -cache: LocalCache
+        -maxCacheSize: int
+        +SaveBehaviorEvent(event: BehaviorEvent): error
+        +GetBehaviorHistory(animalID: string, timeRange: TimeRange): []BehaviorEvent
+        +SaveBehaviorPattern(pattern: BehaviorPattern): error
+        +GetAnimalPatterns(animalID: string): []BehaviorPattern
+        +GetLocalAnomalies(timeRange: TimeRange): []BehaviorEvent
+        +CompactOldData(retentionPeriod: time.Duration): error
+        -buildQuery(filters: QueryFilters): string
+        -mapRowToBehaviorEvent(row: *sql.Row): BehaviorEvent
+        -initializeDatabase(): error
+        -createIndexes(): error
+    }
+}
+
+package "dto.edge" {
+    class AIDetectionEvent {
+        +DetectionID: string
+        +Timestamp: time.Time
+        +AnimalDetections: []AnimalDetection
+        +BoundingBoxes: []BoundingBox
+        +ConfidenceScores: []float64
+        +FrameMetadata: FrameMetadata
+        +ProcessingLatency: time.Duration
+        +GetHighConfidenceDetections(): []AnimalDetection
+    }
+
+    class AnomalyResult {
+        +IsAnomaly: bool
+        +AnomalyType: AnomalyType
+        +Confidence: float64
+        +Explanation: string
+        +RecommendedAction: ActionType
+        +Severity: SeverityLevel
+        +LocalProcessingTime: time.Duration
+        +RequiresSync: bool
+    }
+
+    class BehaviorHistory {
+        +AnimalID: string
+        +TimeRange: TimeRange
+        +BehaviorEvents: []BehaviorEvent
+        +Patterns: []BehaviorPattern
+        +Anomalies: []BehaviorEvent
+        +Statistics: LocalBehaviorStatistics
+        +DataSource: DataSource
+        +GetSummary(): BehaviorSummary
+    }
+
+    enum AnomalyType {
+        HEALTH_ISSUE
+        BEHAVIORAL_CHANGE
+        ENVIRONMENTAL_STRESS
+        SOCIAL_CONFLICT
+        EQUIPMENT_ISSUE
+        FEEDING_ANOMALY
+    }
+
+    enum DataSource {
+        LOCAL_ANALYSIS
+        HISTORICAL_DATA
+        PATTERN_INFERENCE
+        RULE_BASED
+    }
+}
+
+' Реализация интерфейсов
+EdgeBehaviorAnalyzer ..|> BehaviorAnalyzer
+StatisticalPatternDetector ..|> LocalPatternDetector
+EdgeMLAnomalyClassifier ..|> LocalAnomalyClassifier
+SQLiteBehaviorRepository ..|> LocalBehaviorRepository
+
+' Композиция и агрегация
+EdgeBehaviorAnalyzer *-- LocalPatternDetector
+EdgeBehaviorAnalyzer *-- LocalAnomalyClassifier
+EdgeBehaviorAnalyzer *-- LocalRuleEngine
+EdgeBehaviorAnalyzer o-- LocalBehaviorRepository
+
+' Использование доменных объектов
+EdgeBehaviorAnalyzer ..> BehaviorEvent : creates
+EdgeBehaviorAnalyzer ..> BehaviorPattern : uses
+StatisticalPatternDetector ..> BehaviorPattern : creates
+EdgeMLAnomalyClassifier ..> AnomalyResult : returns
+
+' Ассоциации
+BehaviorEvent --> BehaviorType
+BehaviorEvent --> Animal
+BehaviorPattern --> PatternType
+Animal --> HealthStatus
+AnomalyResult --> AnomalyType
+BehaviorHistory --> DataSource
+
+' Зависимости данных
+EdgeBehaviorAnalyzer ..> AIDetectionEvent : processes
+EdgeBehaviorAnalyzer ..> BehaviorHistory : returns
+LocalBehaviorRepository ..> BehaviorEvent : stores/retrieves
+LocalBehaviorRepository ..> BehaviorPattern : stores/retrieves
+
+@enduml
